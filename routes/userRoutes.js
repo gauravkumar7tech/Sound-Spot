@@ -1,38 +1,35 @@
 const express = require("express");
 const userController = require("../controllers/userController");
-const app = express();
+const router = express.Router();
 const User = require("../models/Users.js");
 
-// Middleware to check if the user is logged in
-app.use((req, res, next) => {
-    if (req.session.user !== undefined) {
+router.use((req, res, next) => {
+    if (req.session && req.session.user) {
         next();
-    } else {
-        res.render("404", {
-            user: req.session.user === undefined ? "" : req.session.user,
-            currentPage: "404",
-        });
+        return;
     }
+
+    res.render("404", {
+        user: req.session && req.session.user ? req.session.user : "",
+        currentPage: "404",
+    });
 });
 
-// User-related routes
-app.get("/users" ,async (req, res) => {
+router.get("/users", async (req, res) => {
     try {
       const users = await User.find();
-      console.log(users);
-      res.render("/ManageUsers", {
-        users
-      })
-  
+      res.render("AdminPart/ManageUsers", {
+        currentPage: "ManageUsers",
+        user: req.session.user,
+        users,
+      });
     } catch (error) {
       console.error('Error fetching users:', error);
       res.status(500).send("Internal Server Error");
     }
   });
-  
 
-  
-app.post('/auth/delete-users', userController.deleteUser);
-app.post("/users", userController.addUser);
+router.post('/auth/delete-users', userController.deleteUser);
+router.post("/users", userController.addUser);
 
-module.exports = app;
+module.exports = router;

@@ -6,16 +6,38 @@ const { connectToMongoDB } = require('./config/mongo.js');
 const { setupRoutes } = require('./routes/routes.js');
 const app = express();
 const path = require('path');
+const passport = require('passport');
+const { oauthBaseUrl } = require('./config/passport.js');
 
-const cors=require('cors');
-const corsConfig ={
+app.set('trust proxy', 1);
+app.locals.oauthBaseUrl = oauthBaseUrl;
 
-  origin: "https://sound-spot-music-web-application-1ud6ag6hz.vercel.app/",
-  credential:true,
-  methods:["GET","POST","PUT","DELETE"],
-  allowedHeaders: ['Content-Type'],
-  };
-  app.options('*', cors(corsConfig));
+const cors = require('cors');
+const allowedOrigins = [
+  'https://sound-spot-music-web-application-1ud6ag6hz.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:3003',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:3002',
+  'http://127.0.0.1:3003',
+];
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -62,16 +84,38 @@ connectToMongoDB();
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production' || process.env.RENDER === 'true',
+    },
   })
 );
+app.use(passport.initialize());
 
 // Setup routes
 setupRoutes(app);
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 5000;
 
-app.listen(PORT,()=>{
-  console.log("server is running.............")
-})
+const startServer = (port) => {
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`server is running on http://localhost:${port}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      const fallbackPort = port + 1;
+      console.warn(`Port ${port} is busy. Retrying on ${fallbackPort}...`);
+      startServer(fallbackPort);
+      return;
+    }
+
+    console.error('Server startup error:', err);
+    process.exit(1);
+  });
+};
+
+startServer(PORT);

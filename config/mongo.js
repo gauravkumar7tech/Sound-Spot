@@ -16,19 +16,36 @@ async function removeLegacyUsernameIndex() {
 }
 
 function connectToMongoDB() {
-  mongoose
-    .connect(process.env.CONNECTION_STRING, {
+  const primaryUri = process.env.MONGO_URI || process.env.CONNECTION_STRING;
+  const fallbackUri = "mongodb://127.0.0.1:27017/soundspot";
+  const uri = primaryUri || fallbackUri;
+
+  const connect = async (connectionString) => {
+    await mongoose.connect(connectionString, {
       serverSelectionTimeoutMS: 15000,
       retryWrites: true,
       w: 'majority',
-    })
-    .then(async () => {
-      console.log("MongoDB connected");
-      await removeLegacyUsernameIndex();
-    })
-    .catch((err) => {
-      console.error("MongoDB connection error:", err.message || err);
     });
+
+    console.log("MongoDB connected");
+    await removeLegacyUsernameIndex();
+  };
+
+  const handleFailure = async (err) => {
+    if (primaryUri && uri === primaryUri) {
+      console.warn("Primary MongoDB URI failed. Retrying with local MongoDB fallback...");
+      try {
+        await connect(fallbackUri);
+      } catch (fallbackErr) {
+        console.error("MongoDB connection error:", fallbackErr.message || fallbackErr);
+      }
+      return;
+    }
+
+    console.error("MongoDB connection error:", err.message || err);
+  };
+
+  connect(uri).catch(handleFailure);
 }
 
 module.exports = { connectToMongoDB };

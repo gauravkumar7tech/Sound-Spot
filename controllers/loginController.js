@@ -14,6 +14,10 @@ const loginProcess = async (req, res) => {
       return res.status(401).send("Please verify your email before logging in");
     }
 
+    if (!user.password) {
+      return res.status(401).send("This account uses social sign-in. Continue with its provider.");
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).send("Invalid email or password");

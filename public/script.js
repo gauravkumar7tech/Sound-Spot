@@ -2,6 +2,18 @@ const container = document.getElementById('container');
 const registerBtn = document.getElementById('register');
 const loginBtn = document.getElementById('login');
 
+const authErrorMessages = {
+    'provider-not-configured': 'Social sign-in is not configured yet. Use email sign-in instead.',
+    'provider-failed': 'Social sign-in could not be completed. Please try again.',
+    failed: 'Social sign-in failed. Please try again.',
+};
+const authError = new URLSearchParams(window.location.search).get('authError');
+if (authError && authErrorMessages[authError]) {
+    const loginError = document.getElementById('loginErr');
+    loginError.innerText = authErrorMessages[authError];
+    loginError.style.color = 'red';
+}
+
 registerBtn.addEventListener('click', () => {
     container.classList.add("active");
 });
@@ -29,7 +41,7 @@ async function validateForm(event, form) {
 
     if (!formObj.email) {
         errors.email = 'Please enter your email address';
-    } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formObj.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(formObj.email)) {
         errors.email = 'Please enter a valid email address';
     }
 
@@ -75,13 +87,13 @@ async function validateForm(event, form) {
             body: JSON.stringify(formObj)
         });
 
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
 
-        if (!result.success) {
+        if (!response.ok || !result.success) {
             if (result.errors) {
                 displayErrors(result.errors);
             } else {
-                displayErrors({ general: 'Registration failed' });
+                displayErrors({ general: result.message || `Registration failed (${response.status}).` });
             }
         } else {
             document.getElementById('signupFields').hidden = true;
@@ -228,20 +240,26 @@ async function validateLogin(event) {
         return;
     }
 
-    // Proceed with form submission if no errors
-    const response = await fetch(form.action, {
-        method: form.method,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formObj)
-    });
+    try {
+        const response = await fetch(form.action, {
+            method: form.method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formObj)
+        });
 
-    if (!response.ok) {
-        const result = await response.text();
-        displayLoginErrors({ general: result });
-    } else {
-        form.submit();
+        if (!response.ok) {
+            const result = await response.text();
+            displayLoginErrors({ general: result || 'Sign in failed. Please try again.' });
+        } else if (response.redirected) {
+            window.location.assign(response.url);
+        } else {
+            displayLoginErrors({ general: 'Sign in could not be completed. Please try again.' });
+        }
+    } catch (error) {
+        console.error('Error during sign-in:', error);
+        displayLoginErrors({ general: 'Unable to reach the server. Please try again.' });
     }
 }
 

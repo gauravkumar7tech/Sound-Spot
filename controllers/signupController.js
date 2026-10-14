@@ -39,7 +39,7 @@ const registrationProcess = async (req, res) => {
 
         if (!email) {
             errors.email = 'Please enter your email address';
-        } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+        } else if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email)) {
             errors.email = 'Please enter a valid email address';
         }
 

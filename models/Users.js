@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
     minlength: [3, 'Password must be at least 3 characters long'],
   },
   email: {
@@ -22,14 +22,14 @@ const userSchema = new mongoose.Schema({
     unique: true,
     validate: {
       validator: function(v) {
-        return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
+        return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(v);
       },
       message: props => `${props.value} is not a valid email address!`
     },
   },
   phone: {
     type: String,
-    required: true,
+    required: false,
     validate: {
       validator: function(v) {
         return /^\d{10}$/.test(v);
@@ -40,17 +40,28 @@ const userSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: ['Male', 'Female', 'Other'],
-    required: true,
+    required: false,
   },
   country: {
     type: String,
-    required: true,
+    required: false,
   },
   type: {
     type: String,
     enum: ['user', 'admin'],
     required: true,
   },
+  socialAccounts: [{
+    provider: {
+      type: String,
+      enum: ['google', 'facebook', 'github', 'linkedin'],
+      required: true,
+    },
+    providerId: {
+      type: String,
+      required: true,
+    },
+  }],
   verificationToken: {
     type: String,
   },

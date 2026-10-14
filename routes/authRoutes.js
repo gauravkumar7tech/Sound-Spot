@@ -15,6 +15,12 @@ const songController = require("../controllers/songController.js");
 const song = require("../models/song");
 const Playlist = require("../models/Playlist.js");
 const playlistController = require("../controllers/playlistController.js");
+const { passport, configuredProviders } = require("../config/passport.js");
+const {
+  finishSocialLogin,
+  startLinkedInLogin,
+  finishLinkedInLogin,
+} = require("../controllers/socialAuthController.js");
 
 
 router.post("/delete-playlists", (req, res, next) => {
@@ -45,9 +51,12 @@ router.get("/", (req, res) => {
 });
 
 router.get("/index", (req, res) => {
+  const oauthBaseUrl = (process.env.OAUTH_BASE_URL || "https://soundspot-backend.onrender.com").replace(/\/+$/, "");
+
   res.render("index", {
     currentPage: "index",
     user: req.session.user || "",
+    oauthBaseUrl,
   });
 });
 router.get("/home", authMiddleware, (req, res) => {
@@ -398,6 +407,47 @@ router.post("/login", loginController.loginProcess);
 router.post("/signup", signupController.registrationProcess);
 router.post("/verify-otp", verifyController.verifyOtp);
 router.post("/resend-otp", verifyController.resendOtp);
+
+const socialProviders = ['google', 'facebook', 'github'];
+const socialScopes = {
+  google: ['profile', 'email'],
+  facebook: ['email'],
+  github: ['user:email'],
+};
+
+socialProviders.forEach((provider) => {
+  router.get(`/${provider}`, (req, res, next) => {
+    if (!configuredProviders.has(provider)) {
+      return res.redirect('/index?authError=provider-not-configured');
+    }
+    return passport.authenticate(provider, { scope: socialScopes[provider], state: true })(req, res, next);
+  });
+
+  router.get(`/${provider}/callback`, (req, res, next) => {
+    if (!configuredProviders.has(provider)) {
+      return res.redirect('/index?authError=provider-not-configured');
+    }
+
+    return passport.authenticate(provider, { session: false }, (error, profile) => {
+      if (error || !profile) {
+        console.error(`${provider} sign-in failed:`, error?.message || 'No profile returned');
+        return res.redirect('/index?authError=provider-failed');
+      }
+      return finishSocialLogin(req, res, provider, profile).catch((loginError) => {
+        console.error(`${provider} account sign-in failed:`, loginError.message || loginError);
+        res.redirect('/index?authError=failed');
+      });
+    })(req, res, next);
+  });
+});
+
+router.get('/linkedin', startLinkedInLogin);
+router.get('/linkedin/callback', (req, res) => {
+  finishLinkedInLogin(req, res).catch((error) => {
+    console.error('LinkedIn sign-in failed:', error.message || error);
+    res.redirect('/index?authError=provider-failed');
+  });
+});
 
 
 

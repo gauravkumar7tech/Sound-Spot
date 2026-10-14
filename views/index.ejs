@@ -15,10 +15,10 @@
                 <h1>Create Account</h1>
                 <div id="signupFields">
                 <div class="social-icons">
-                    <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="<%= oauthBaseUrl %>/auth/google" class="icon" aria-label="Continue with Google"><i class="fa-brands fa-google-plus-g"></i></a>
+                    <a href="<%= oauthBaseUrl %>/auth/facebook" class="icon" aria-label="Continue with Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="<%= oauthBaseUrl %>/auth/github" class="icon" aria-label="Continue with GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="<%= oauthBaseUrl %>/auth/linkedin" class="icon" aria-label="Continue with LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
                 </div>
                 <span>or use your email for registration</span>
                 <input type="text" placeholder="Name" name="firstname">
@@ -76,10 +76,10 @@
             <form id="loginForm" onsubmit="return validateLogin(event)" action="/auth/login" method="POST">
                 <h1>Sign In</h1>
                 <div class="social-icons">
-                    <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="<%= oauthBaseUrl %>/auth/google" class="icon" aria-label="Continue with Google"><i class="fa-brands fa-google-plus-g"></i></a>
+                    <a href="<%= oauthBaseUrl %>/auth/facebook" class="icon" aria-label="Continue with Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="<%= oauthBaseUrl %>/auth/github" class="icon" aria-label="Continue with GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="<%= oauthBaseUrl %>/auth/linkedin" class="icon" aria-label="Continue with LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
                 </div>
                 <span>or use your email password</span>
                 <input type="email" placeholder="Email" name="loginemail">
