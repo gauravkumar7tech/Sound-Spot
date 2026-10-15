@@ -14,6 +14,7 @@ app.locals.oauthBaseUrl = oauthBaseUrl;
 
 const cors = require('cors');
 const allowedOrigins = [
+  'https://soundspot-56c18f9a9a1e.onrender.com',
   'https://sound-spot-music-web-application-1ud6ag6hz.vercel.app',
   'https://soundspot-music-web.com',
   'https://www.soundspot-music-web.com',
