@@ -15,6 +15,8 @@ app.locals.oauthBaseUrl = oauthBaseUrl;
 const cors = require('cors');
 const allowedOrigins = [
   'https://sound-spot-music-web-application-1ud6ag6hz.vercel.app',
+  'https://soundspot-music-web.com',
+  'https://www.soundspot-music-web.com',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',

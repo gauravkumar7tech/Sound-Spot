@@ -11,7 +11,7 @@
 <body>
     <div class="container" id="container">
         <div class="form-container sign-up">
-            <form id="signupForm" onsubmit="return validateForm(event, this)" action="/auth/signup" method="POST">
+            <form id="signupForm" onsubmit="return validateForm(event, this)" action="<%= oauthBaseUrl %>/auth/signup" method="POST">
                 <h1>Create Account</h1>
                 <div id="signupFields">
                 <div class="social-icons">
@@ -73,7 +73,7 @@
 
 
         <div class="form-container sign-in">
-            <form id="loginForm" onsubmit="return validateLogin(event)" action="/auth/login" method="POST">
+            <form id="loginForm" onsubmit="return validateLogin(event)" action="<%= oauthBaseUrl %>/auth/login" method="POST">
                 <h1>Sign In</h1>
                 <div class="social-icons">
                     <a href="<%= oauthBaseUrl %>/auth/google" class="icon" aria-label="Continue with Google"><i class="fa-brands fa-google-plus-g"></i></a>

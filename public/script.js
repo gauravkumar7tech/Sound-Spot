@@ -87,13 +87,18 @@ async function validateForm(event, form) {
             body: JSON.stringify(formObj)
         });
 
-        const result = await response.json().catch(() => ({}));
+        const contentType = response.headers.get('content-type') || '';
+        const result = contentType.includes('application/json')
+            ? await response.json()
+            : {};
 
         if (!response.ok || !result.success) {
             if (result.errors) {
                 displayErrors(result.errors);
             } else {
-                displayErrors({ general: result.message || `Registration failed (${response.status}).` });
+                const message = result.message
+                    || `Registration service returned HTTP ${response.status}. Please check the backend and try again.`;
+                displayErrors({ general: message });
             }
         } else {
             document.getElementById('signupFields').hidden = true;
@@ -109,7 +114,8 @@ async function validateForm(event, form) {
 }
 
 async function submitOtpRequest(path, body) {
-    const response = await fetch(path, {
+    const apiUrl = new URL(path, document.getElementById('signupForm').action);
+    const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
