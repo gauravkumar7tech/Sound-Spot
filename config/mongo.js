@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
 
+function getConnectionFailureReason(error) {
+  const details = `${error.name || ""} ${error.code || ""} ${error.message || ""} ${error.cause?.message || ""}`;
+
+  if (/bad auth|authentication failed|authenticationfailure|code 8000/i.test(details)) {
+    return "MongoDB rejected the database credentials. Verify the Atlas database username and password.";
+  }
+  if (/ENOTFOUND|querysrv|ESERVFAIL/i.test(details)) {
+    return "MongoDB hostname could not be resolved. Verify the Atlas cluster URI.";
+  }
+  if (/ETIMEDOUT|ECONNREFUSED|ENETUNREACH|IP access/i.test(details)) {
+    return "MongoDB could not be reached. Verify the Atlas IP access list and cluster network status.";
+  }
+
+  return `MongoDB connection failed (${error.name || "Error"}${error.code ? `, code ${error.code}` : ""}).`;
+}
+
 async function removeLegacyUsernameIndex() {
   try {
     const usersCollection = mongoose.connection.collection("users");
@@ -33,7 +49,7 @@ function connectToMongoDB() {
 
   const handleFailure = async (err) => {
     if (primaryUri && uri === primaryUri) {
-      console.warn("Primary MongoDB URI failed. Retrying with local MongoDB fallback...");
+      console.error(getConnectionFailureReason(err));
       try {
         await connect(fallbackUri);
       } catch (fallbackErr) {
